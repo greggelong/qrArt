@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Participatory QR Art – Rules & Grid</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f0f2f6;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 960px;
+      width: 100%;
+      background: white;
+      padding: 2rem;
+      border-radius: 24px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin: 1.2rem 0 0.3rem;
+      color: #374151;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      font-size: 1rem;
+      border: 1px solid #d1d9e6;
+      border-radius: 10px;
+      background: #fafcff;
+    }
+
+    select {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d9e6;
+      border-radius: 10px;
+      background: #fafcff;
+      font-size: 1rem;
+    }
+
+    .lang-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .preview-area {
+      margin: 1.5rem 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      background: #f8fafd;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid #eef2f6;
+    }
+
+    .preview-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1 1 200px;
+    }
+
+    .preview-item canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin: 0.5rem 0;
+      justify-content: center;
+    }
+
+    .btn {
+      background: #1f2937;
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+      font-size: 0.9rem;
+    }
+
+    .btn:hover {
+      background: #374151;
+      transform: scale(1.01);
+    }
+
+    .btn-secondary {
+      background: #e5e9f0;
+      color: #1f2937;
+    }
+
+    .btn-secondary:hover {
+      background: #d1d9e6;
+    }
+
+    .btn-danger {
+      background: #b91c1c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #991b1b;
+    }
+
+    .rules-area {
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .rules-area textarea {
+      width: 100%;
+      height: 200px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      padding: 0.8rem;
+      border: 1px solid #d1d9e6;
+      border-radius: 10px;
+      background: #fafcff;
+      resize: vertical;
+    }
+
+    .grid-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .grid-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .footnote {
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: #4b5a6e;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1.2rem;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 0.8rem;
+      border-radius: 10px;
+      margin: 0.5rem 0;
+      font-weight: 500;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="lang-row">
+      <h1 id="mainTitle">✦ Participatory QR Art</h1>
+      <div style="margin-left:auto;">
+        <label for="langSelect" id="langLabel" style="display:inline; margin-right:0.5rem;">Language / 语言</label>
+        <select id="langSelect">
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
+      </div>
+    </div>
+
+    <p id="subtitle">Enter any text or URL. We'll generate a QR code, a blank/fillable grid, and a numbered list of
+      rules.</p>
+
+    <label for="textInput" id="dataLabel">Content to encode</label>
+    <input type="text" id="textInput" value="Art is obeying 艺术就是服从" placeholder="e.g. https://your.link" />
+    <div id="errorBox" class="error-message"></div>
+
+    <div class="preview-area">
+      <div class="preview-item">
+        <h3 id="qrTitle">QR Code (check)</h3>
+        <canvas id="qrCanvas" width="500" height="500"></canvas>
+        <div class="btn-group">
+          <button class="btn" id="updateBtn">⟳ <span id="updateLabel">Update</span></button>
+          <button class="btn" id="downloadQrBtn">⬇ <span id="downloadQrLabel">QR PNG</span></button>
+        </div>
+      </div>
+
+      <div class="preview-item">
+        <h3 id="gridTitle">Grid for Participants</h3>
+        <canvas id="gridCanvas" width="400" height="400"></canvas>
+        <div class="grid-controls">
+          <label>
+            <input type="checkbox" id="showFilledCheck" />
+            <span id="showFilledLabel">Show filled (reference)</span>
+          </label>
+          <div class="btn-group" style="margin:0;">
+            <button class="btn" id="downloadGridBtn">⬇ <span id="downloadGridLabel">Grid Image</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rules section -->
+    <div class="rules-area">
+      <label for="rulesText" id="rulesLabel">📋 Numbered Rules (copy or download)</label>
+      <textarea id="rulesText" readonly></textarea>
+      <div class="btn-group">
+        <button class="btn" id="downloadRulesBtn">📄 <span id="downloadRulesLabel">Download Rules (.txt)</span></button>
+        <button class="btn btn-secondary" id="speakRulesBtn">🔊 <span id="speakLabel">Speak Rules</span></button>
+        <button class="btn btn-danger" id="stopSpeakBtn">⏹ <span id="stopLabel">Stop Speaking</span></button>
+        <button class="btn btn-secondary" id="copyRulesBtn">📋 <span id="copyLabel">Copy Rules</span></button>
+      </div>
+    </div>
+
+    <div class="footnote" id="footnote">
+      <strong>How to use:</strong><br />
+      • The rules list shows every cell that must be filled (numbered 1, 2, 3…).<br />
+      • Click <strong>Speak Rules</strong> to hear them read aloud – use <strong>Stop Speaking</strong> to cancel.<br />
+      • The grid can be toggled between <strong>blank</strong> (for participants) and <strong>filled</strong> (the
+      correct solution).<br />
+      • Print the blank grid and give participants the rules – they'll create a large‑scale QR code!
+    </div>
+  </div>
+
+  <!-- QRCode library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+  </script>
+
+  <script>
+    (function () {
+      // ----- Translations -----
+      const translations = {
+        en: {
+          mainTitle: '✦ Participatory QR Art',
+          subtitle: 'Enter any text or URL. We\'ll generate a QR code, a blank/fillable grid, and a numbered list of rules.',
+          dataLabel: 'Content to encode',
+          qrTitle: 'QR Code (check)',
+          gridTitle: 'Grid for Participants',
+          showFilledLabel: 'Show filled (reference)',
+          rulesLabel: '📋 Numbered Rules (copy or download)',
+          updateLabel: 'Update',
+          downloadQrLabel: 'QR PNG',
+          downloadGridLabel: 'Grid Image',
+          downloadRulesLabel: 'Download Rules (.txt)',
+          speakLabel: 'Speak Rules',
+          stopLabel: 'Stop Speaking',
+          copyLabel: 'Copy Rules',
+          footnote: `<strong>How to use:</strong><br />
+          • The rules list shows every cell that must be filled (numbered 1, 2, 3…).<br />
+          • Click <strong>Speak Rules</strong> to hear them read aloud – use <strong>Stop Speaking</strong> to cancel.<br />
+          • The grid can be toggled between <strong>blank</strong> (for participants) and <strong>filled</strong> (the correct solution).<br />
+          • Print the blank grid and give participants the rules – they'll create a large‑scale QR code!`,
+          errorMessage: 'Data too long to generate QR code. Please shorten the text or use only alphanumeric characters (A-Z, 0-9).'
+        },
+        zh: {
+          mainTitle: '✦ 参与式 QR 艺术',
+          subtitle: '输入任何文本或 URL。我们将生成一个 QR 码、一个空白/可填充网格，以及一个编号的规则列表。',
+          dataLabel: '要编码的内容',
+          qrTitle: 'QR 码（验证用）',
+          gridTitle: '参与者网格',
+          showFilledLabel: '显示填充结果（参考）',
+          rulesLabel: '📋 编号规则（复制或下载）',
+          updateLabel: '更新',
+          downloadQrLabel: '下载 QR 图片',
+          downloadGridLabel: '下载网格图片',
+          downloadRulesLabel: '下载规则 (.txt)',
+          speakLabel: '朗读规则',
+          stopLabel: '停止朗读',
+          copyLabel: '复制规则',
+          footnote: `<strong>使用方法：</strong><br />
+          • 规则列表列出了所有需要填充的单元格（编号为 1, 2, 3…）。<br />
+          • 点击 <strong>朗读规则</strong> 可以听到它们被朗读出来 – 使用 <strong>停止朗读</strong> 取消。<br />
+          • 网格可以在 <strong>空白</strong>（供参与者使用）和 <strong>已填充</strong>（正确解）之间切换。<br />
+          • 打印空白网格，并将规则交给参与者 – 他们将创作出一个大型 QR 码！`,
+          errorMessage: '数据太长，无法生成二维码。请缩短内容或仅使用字母和数字（A-Z, 0-9）。'
+        }
+      };
+
+      // ----- DOM refs -----
+      const textInput = document.getElementById('textInput');
+      const qrCanvas = document.getElementById('qrCanvas');
+      const qrCtx = qrCanvas.getContext('2d');
+      const gridCanvas = document.getElementById('gridCanvas');
+      const gridCtx = gridCanvas.getContext('2d');
+      const rulesText = document.getElementById('rulesText');
+      const showFilledCheck = document.getElementById('showFilledCheck');
+      const langSelect = document.getElementById('langSelect');
+      const errorBox = document.getElementById('errorBox');
+
+      const mainTitle = document.getElementById('mainTitle');
+      const subtitle = document.getElementById('subtitle');
+      const dataLabel = document.getElementById('dataLabel');
+      const qrTitle = document.getElementById('qrTitle');
+      const gridTitle = document.getElementById('gridTitle');
+      const showFilledLabel = document.getElementById('showFilledLabel');
+      const rulesLabel = document.getElementById('rulesLabel');
+      const updateLabel = document.getElementById('updateLabel');
+      const downloadQrLabel = document.getElementById('downloadQrLabel');
+      const downloadGridLabel = document.getElementById('downloadGridLabel');
+      const downloadRulesLabel = document.getElementById('downloadRulesLabel');
+      const speakLabel = document.getElementById('speakLabel');
+      const stopLabel = document.getElementById('stopLabel');
+      const copyLabel = document.getElementById('copyLabel');
+      const footnote = document.getElementById('footnote');
+
+      const updateBtn = document.getElementById('updateBtn');
+      const downloadQrBtn = document.getElementById('downloadQrBtn');
+      const downloadGridBtn = document.getElementById('downloadGridBtn');
+      const downloadRulesBtn = document.getElementById('downloadRulesBtn');
+      const speakRulesBtn = document.getElementById('speakRulesBtn');
+      const stopSpeakBtn = document.getElementById('stopSpeakBtn');
+      const copyRulesBtn = document.getElementById('copyRulesBtn');
+
+      // ----- State -----
+      let currentMatrix = null;
+      let currentRules = [];
+      let speechUtterance = null;
+      let currentLang = 'en';
+      let voicesLoaded = false;
+      let availableVoices = [];
+
+      // ----- Helper: Excel‑style column labels -----
+      function getColumnLabel(index) {
+        let label = '';
+        let num = index;
+        while (num >= 0) {
+          const rem = num % 26;
+          label = String.fromCharCode(65 + rem) + label;
+          num = Math.floor(num / 26) - 1;
+          if (num < 0) break;
+        }
+        return label;
+      }
+
+      // ----- Generate QR matrix with error handling -----
+      function generateQRMatrix(text) {
+        const tempDiv = document.createElement('div');
+        let qr;
+        try {
+          qr = new QRCode(tempDiv, {
+            text: text,
+            width: 300,
+            height: 300,
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        } catch (e) {
+          // The library throws an error when data is too large
+          throw new Error('overflow');
+        }
+        const model = qr._oQRCode;
+        if (!model || typeof model.getModuleCount !== 'function') {
+          throw new Error('QR generation failed.');
+        }
+        const size = model.getModuleCount();
+        return { size, isDark: (r, c) => model.isDark(r, c) };
+      }
+
+      // ----- Draw QR -----
+      function drawQR() {
+        const text = textInput.value.trim() || 'HELLO';
+        // Clear any previous error
+        errorBox.style.display = 'none';
+        errorBox.textContent = '';
+        try {
+          const { size, isDark } = generateQRMatrix(text);
+          currentMatrix = { size, isDark };
+
+          const moduleSize = qrCanvas.width / size;
+
+          qrCtx.fillStyle = '#ffffff';
+          qrCtx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
+
+          qrCtx.fillStyle = '#000000';
+          for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+              if (isDark(r, c)) {
+                const x = c * moduleSize;
+                const y = r * moduleSize;
+                qrCtx.fillRect(x, y, moduleSize, moduleSize);
+              }
+            }
+          }
+
+          generateRules();
+          rulesText.value = currentRules.join('\n');
+          drawGrid(showFilledCheck.checked);
+
+        } catch (err) {
+          // Show error message (bilingual)
+          const t = translations[currentLang] || translations.en;
+          errorBox.textContent = t.errorMessage;
+          errorBox.style.display = 'block';
+          // Clear the QR canvas and grid
+          qrCtx.fillStyle = '#f0f0f0';
+          qrCtx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
+          gridCtx.fillStyle = '#f0f0f0';
+          gridCtx.fillRect(0, 0, gridCanvas.width, gridCanvas.height);
+          // Clear rules
+          currentRules = [];
+          rulesText.value = '';
+          currentMatrix = null;
+          console.error(err);
+        }
+      }
+
+      // ----- Generate rules -----
+      function generateRules() {
+        if (!currentMatrix) { currentRules = []; return; }
+        const { size, isDark } = currentMatrix;
+        const quiet = 4;
+        const total = size + 2 * quiet;
+        const darkCoords = [];
+        for (let r = 0; r < total; r++) {
+          for (let c = 0; c < total; c++) {
+            const qrR = r - quiet;
+            const qrC = c - quiet;
+            if (qrR >= 0 && qrR < size && qrC >= 0 && qrC < size) {
+              if (isDark(qrR, qrC)) {
+                const rowLabel = getColumnLabel(r);
+                const colLabel = c + 1;
+                darkCoords.push(rowLabel + colLabel);
+              }
+            }
+          }
+        }
+        darkCoords.sort((a, b) => {
+          const aRow = a.match(/[A-Z]+/)[0];
+          const bRow = b.match(/[A-Z]+/)[0];
+          const aNum = parseInt(a.match(/\d+/)[0]);
+          const bNum = parseInt(b.match(/\d+/)[0]);
+          if (aRow < bRow) return -1;
+          if (aRow > bRow) return 1;
+          return aNum - bNum;
+        });
+        currentRules = darkCoords.map((coord, idx) => `${idx + 1}. ${coord}`);
+      }
+
+      // ----- Draw grid -----
+      function drawGrid(filled) {
+        if (!currentMatrix) {
+          // If no matrix, just clear grid
+          gridCtx.fillStyle = '#f0f0f0';
+          gridCtx.fillRect(0, 0, gridCanvas.width, gridCanvas.height);
+          return;
+        }
+        const { size, isDark } = currentMatrix;
+        const quiet = 4;
+        const total = size + 2 * quiet;
+
+        const w = gridCanvas.width;
+        const h = gridCanvas.height;
+
+        const leftMargin = 45;
+        const bottomMargin = 50;
+        const topMargin = 25;
+        const rightMargin = 25;
+
+        const availableWidth = w - leftMargin - rightMargin;
+        const availableHeight = h - topMargin - bottomMargin;
+        const moduleSize = Math.floor(Math.min(availableWidth, availableHeight) / total);
+        const gridSize = moduleSize * total;
+
+        const startX = leftMargin + (availableWidth - gridSize) / 2;
+        const startY = topMargin + (availableHeight - gridSize) / 2;
+
+        gridCtx.fillStyle = '#ffffff';
+        gridCtx.fillRect(0, 0, w, h);
+
+        gridCtx.fillStyle = '#ffffff';
+        gridCtx.strokeStyle = '#666666';   // darker gray – or use '#000000' for pure black
+        gridCtx.lineWidth = 1;          // thicker line for better visibility
+        for (let r = 0; r < total; r++) {
+          for (let c = 0; c < total; c++) {
+            const x = startX + c * moduleSize;
+            const y = startY + r * moduleSize;
+            if (filled) {
+              const qrR = r - quiet;
+              const qrC = c - quiet;
+              if (qrR >= 0 && qrR < size && qrC >= 0 && qrC < size && isDark(qrR, qrC)) {
+                gridCtx.fillStyle = '#000000';
+                gridCtx.fillRect(x, y, moduleSize, moduleSize);
+                gridCtx.fillStyle = '#ffffff';
+              }
+            }
+            gridCtx.strokeRect(x, y, moduleSize, moduleSize);
+          }
+        }
+
+        gridCtx.textAlign = 'right';
+        gridCtx.textBaseline = 'middle';
+        gridCtx.font = `${Math.max(10, moduleSize * 0.6)}px monospace`;
+        gridCtx.fillStyle = '#1f2937';
+        for (let r = 0; r < total; r++) {
+          const y = startY + r * moduleSize + moduleSize / 2;
+          gridCtx.fillText(getColumnLabel(r), startX - 10, y);
+        }
+
+        gridCtx.textAlign = 'center';
+        gridCtx.textBaseline = 'top';
+        for (let c = 0; c < total; c++) {
+          const x = startX + c * moduleSize + moduleSize / 2;
+          const y = startY + gridSize + 10;
+          gridCtx.fillText(c + 1, x, y);
+        }
+
+        gridCtx.strokeStyle = '#666666';//'#9aa4b0';
+        gridCtx.lineWidth = 1.5;
+        gridCtx.strokeRect(startX, startY, gridSize, gridSize);
+      }
+
+      // ----- Update UI language -----
+      function updateLanguage(lang) {
+        const t = translations[lang] || translations.en;
+        mainTitle.textContent = t.mainTitle;
+        subtitle.textContent = t.subtitle;
+        dataLabel.textContent = t.dataLabel;
+        qrTitle.textContent = t.qrTitle;
+        gridTitle.textContent = t.gridTitle;
+        showFilledLabel.textContent = t.showFilledLabel;
+        rulesLabel.textContent = t.rulesLabel;
+        updateLabel.textContent = t.updateLabel;
+        downloadQrLabel.textContent = t.downloadQrLabel;
+        downloadGridLabel.textContent = t.downloadGridLabel;
+        downloadRulesLabel.textContent = t.downloadRulesLabel;
+        speakLabel.textContent = t.speakLabel;
+        stopLabel.textContent = t.stopLabel;
+        copyLabel.textContent = t.copyLabel;
+        footnote.innerHTML = t.footnote;
+        currentLang = lang;
+        // If error box is visible, update its message
+        if (errorBox.style.display === 'block') {
+          errorBox.textContent = t.errorMessage;
+        }
+      }
+
+      // ----- Voice selection for speech -----
+      function getVoiceForLang(lang) {
+        const targetLang = lang === 'zh' ? 'zh-CN' : 'en-US';
+        let voice = availableVoices.find(v => v.lang === targetLang);
+        if (!voice) {
+          voice = availableVoices.find(v => v.lang.startsWith(targetLang.split('-')[0]));
+        }
+        return voice || null;
+      }
+
+      function loadVoices() {
+        if (voicesLoaded) return;
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+          speechSynthesis.onvoiceschanged = () => {
+            availableVoices = speechSynthesis.getVoices();
+            voicesLoaded = true;
+          };
+        } else {
+          setTimeout(() => {
+            availableVoices = speechSynthesis.getVoices();
+            voicesLoaded = true;
+          }, 200);
+        }
+        availableVoices = speechSynthesis.getVoices();
+        if (availableVoices.length > 0) voicesLoaded = true;
+      }
+      loadVoices();
+
+      // ----- Speak / Stop -----
+      function speakRules() {
+        if (!currentRules.length) {
+          alert(currentLang === 'en' ? 'No rules to speak.' : '没有规则可朗读。');
+          return;
+        }
+        speechSynthesis.cancel();
+
+        if (!voicesLoaded) {
+          availableVoices = speechSynthesis.getVoices();
+          if (availableVoices.length > 0) voicesLoaded = true;
+        }
+
+        const voice = getVoiceForLang(currentLang);
+        const langCode = currentLang === 'zh' ? 'zh-CN' : 'en-US';
+        const spoken = currentRules.join(', ');
+        const utterance = new SpeechSynthesisUtterance(spoken);
+        utterance.lang = langCode;
+        if (voice) utterance.voice = voice;
+        utterance.rate = 0.85;
+        utterance.pitch = 1;
+        speechUtterance = utterance;
+        utterance.onend = () => { speechUtterance = null; };
+        speechSynthesis.speak(utterance);
+      }
+
+      function stopSpeaking() {
+        speechSynthesis.cancel();
+        speechUtterance = null;
+      }
+
+      // ----- Download functions -----
+      function downloadQR() {
+        const link = document.createElement('a');
+        link.download = 'qrcode.png';
+        link.href = qrCanvas.toDataURL('image/png');
+        link.click();
+      }
+
+      function downloadGrid() {
+        const link = document.createElement('a');
+        link.download = showFilledCheck.checked ? 'filled_grid.png' : 'blank_grid.png';
+        link.href = gridCanvas.toDataURL('image/png');
+        link.click();
+      }
+
+      function downloadRules() {
+        const content = currentRules.join('\n');
+        const blob = new Blob([content], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.download = 'rules.txt';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+
+      function copyRules() {
+        navigator.clipboard.writeText(currentRules.join('\n')).then(() => {
+          alert(currentLang === 'en' ? 'Rules copied to clipboard!' : '规则已复制到剪贴板！');
+        }).catch(() => {
+          rulesText.select();
+          document.execCommand('copy');
+          alert(currentLang === 'en' ? 'Rules copied!' : '规则已复制！');
+        });
+      }
+
+      // ----- Set canvas sizes -----
+      function setCanvasSizes() {
+        const qrSize = 600;
+        qrCanvas.width = qrSize;
+        qrCanvas.height = qrSize;
+
+        const gridWidth = 800;
+        const gridHeight = 850;
+        gridCanvas.width = gridWidth;
+        gridCanvas.height = gridHeight;
+      }
+      setCanvasSizes();
+
+      // ----- Event binding -----
+      updateBtn.addEventListener('click', drawQR);
+      textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') drawQR(); });
+
+      showFilledCheck.addEventListener('change', () => {
+        drawGrid(showFilledCheck.checked);
+      });
+
+      downloadQrBtn.addEventListener('click', downloadQR);
+      downloadGridBtn.addEventListener('click', downloadGrid);
+      downloadRulesBtn.addEventListener('click', downloadRules);
+      copyRulesBtn.addEventListener('click', copyRules);
+      speakRulesBtn.addEventListener('click', speakRules);
+      stopSpeakBtn.addEventListener('click', stopSpeaking);
+
+      langSelect.addEventListener('change', (e) => {
+        updateLanguage(e.target.value);
+      });
+
+      // Initial generation and language
+      updateLanguage('en');
+      drawQR();
+    })();
+  </script>
+</body>
+
+</html>
