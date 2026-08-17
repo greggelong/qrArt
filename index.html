@@ -206,7 +206,7 @@
       rules.</p>
 
     <label for="textInput" id="dataLabel">Content to encode</label>
-    <input type="text" id="textInput" value="Art is obeying 艺术就是服从" placeholder="e.g. https://your.link" />
+    <input type="text" id="textInput" value="OBEY" placeholder="e.g. https://your.link" />
     <div id="errorBox" class="error-message"></div>
 
     <div class="preview-area">
@@ -443,32 +443,41 @@
         const { size, isDark } = currentMatrix;
         const quiet = 4;
         const total = size + 2 * quiet;
-        const darkCoords = [];
+
+        // Group by row label
+        const rowMap = new Map(); // key: rowLabel (e.g., "A"), value: array of column numbers
         for (let r = 0; r < total; r++) {
+          const rowLabel = getColumnLabel(r);
+          const cols = [];
           for (let c = 0; c < total; c++) {
             const qrR = r - quiet;
             const qrC = c - quiet;
             if (qrR >= 0 && qrR < size && qrC >= 0 && qrC < size) {
               if (isDark(qrR, qrC)) {
-                const rowLabel = getColumnLabel(r);
-                const colLabel = c + 1;
-                darkCoords.push(rowLabel + colLabel);
+                cols.push(c + 1); // column number (1-indexed)
               }
             }
           }
+          if (cols.length > 0) {
+            rowMap.set(rowLabel, cols);
+          }
         }
-        darkCoords.sort((a, b) => {
-          const aRow = a.match(/[A-Z]+/)[0];
-          const bRow = b.match(/[A-Z]+/)[0];
-          const aNum = parseInt(a.match(/\d+/)[0]);
-          const bNum = parseInt(b.match(/\d+/)[0]);
-          if (aRow < bRow) return -1;
-          if (aRow > bRow) return 1;
-          return aNum - bNum;
-        });
-        currentRules = darkCoords.map((coord, idx) => `${idx + 1}. ${coord}`);
-      }
 
+        // Build the rules lines: "Row A: A1, A3, A7, ..."
+        const lines = [];
+        // We need to iterate rows in order; rowMap preserves insertion order if we iterate over the original sequence
+        for (let r = 0; r < total; r++) {
+          const rowLabel = getColumnLabel(r);
+          if (rowMap.has(rowLabel)) {
+            const cols = rowMap.get(rowLabel);
+            // Sort columns ascending
+            cols.sort((a, b) => a - b);
+            const coordList = cols.map(col => rowLabel + col).join(', ');
+            lines.push(`Row ${rowLabel}: ${coordList}`);
+          }
+        }
+        currentRules = lines;
+      }
       // ----- Draw grid -----
       function drawGrid(filled) {
         if (!currentMatrix) {
